@@ -1,5 +1,6 @@
 """End-to-end v1.1 test: full factory run using a stub claude binary as the
 claude_code executor. Validates the capability-grading verifier path.
+Cross-platform via tests/_stub_claude.py.
 """
 from __future__ import annotations
 import json
@@ -9,10 +10,10 @@ import sys
 import textwrap
 from pathlib import Path
 import pytest
+from _stub_claude import make_claude_wrapper
 
 
 def _init_demo_target(repo: Path) -> None:
-    """Create a minimal demo target with a failing test."""
     (repo / "src" / "calculator").mkdir(parents=True)
     (repo / "tests").mkdir(parents=True)
     (repo / "pyproject.toml").write_text(textwrap.dedent("""
@@ -45,30 +46,37 @@ def _init_demo_target(repo: Path) -> None:
 
 
 def _make_fix_stub(tmp_path: Path) -> Path:
-    """Stub that fixes add() to a + b."""
     stub = tmp_path / "claude_fix.py"
     stub.write_text(textwrap.dedent("""
         #!/usr/bin/env python3
         import json, os, sys
         target = os.path.join(os.getcwd(), "src/calculator/__init__.py")
-        with open(target, "w") as f:
+        with open(target, "w", newline="\\n") as f:
             f.write("def add(a, b):\\n    return a + b\\n")
         print(json.dumps({"result":"fixed","session_id":"s","model":"claude-stub","total_cost_usd":0.0}))
     """).strip())
-    wrapper = tmp_path / "claude"
-    wrapper.write_text(f"#!/usr/bin/env bash\nexec {sys.executable} {stub} \"$@\"\n")
-    wrapper.chmod(0o755)
-    return wrapper
+    return make_claude_wrapper(tmp_path, stub)
+
+
+def _make_noop_stub(tmp_path: Path) -> Path:
+    stub = tmp_path / "claude_noop.py"
+    stub.write_text(textwrap.dedent("""
+        #!/usr/bin/env python3
+        import json, sys
+        with open("README_NOTES.md", "w", newline="\\n") as f:
+            f.write("notes\\n")
+        print(json.dumps({"result":"noop","model":"claude-stub","total_cost_usd":0.0}))
+    """).strip())
+    return make_claude_wrapper(tmp_path, stub)
 
 
 def test_full_run_with_stub_claude_passes(tmp_path, monkeypatch):
     target_repo = tmp_path / "target"
     _init_demo_target(target_repo)
-    stub = _make_fix_stub(tmp_path)
-    monkeypatch.setenv("CLAUDE_CODE_BIN", str(stub))
+    wrapper = _make_fix_stub(tmp_path)
+    monkeypatch.setenv("CLAUDE_CODE_BIN", str(wrapper))
     monkeypatch.setenv("FACTORY_DB_PATH", str(tmp_path / "factory.db"))
 
-    # Use a signal file pointing at the demo
     signal_path = tmp_path / "signal.json"
     signal_path.write_text(json.dumps({
         "signal_id": "sig_test_001",
@@ -92,26 +100,13 @@ def test_full_run_with_stub_claude_passes(tmp_path, monkeypatch):
     assert vr["tests_exit_code"] == 0
     assert vr["diff_size_bytes"] > 0
     assert vr["decision"] == "pass"
-
-    # coding-diff.patch should exist
     assert (Path(result["run_dir"]) / "coding-diff.patch").exists()
 
 
 def test_full_run_with_stub_that_fails_still_grades_fail(tmp_path, monkeypatch):
     target_repo = tmp_path / "target"
     _init_demo_target(target_repo)
-    # Stub that does NOT fix the bug
-    stub = tmp_path / "claude_noop.py"
-    stub.write_text(textwrap.dedent("""
-        #!/usr/bin/env python3
-        import json, sys
-        # Make a no-op file change that doesn't fix the test
-        with open("README_NOTES.md", "w") as f: f.write("notes\\n")
-        print(json.dumps({"result":"noop","model":"claude-stub","total_cost_usd":0.0}))
-    """).strip())
-    wrapper = tmp_path / "claude"
-    wrapper.write_text(f"#!/usr/bin/env bash\nexec {sys.executable} {stub} \"$@\"\n")
-    wrapper.chmod(0o755)
+    wrapper = _make_noop_stub(tmp_path)
     monkeypatch.setenv("CLAUDE_CODE_BIN", str(wrapper))
     monkeypatch.setenv("FACTORY_DB_PATH", str(tmp_path / "factory.db"))
 
@@ -134,4 +129,4 @@ def test_full_run_with_stub_that_fails_still_grades_fail(tmp_path, monkeypatch):
     vr = result["verifier"]
     assert vr["executor"] == "claude_code"
     assert vr["tests_exit_code"] != 0
-    assert vr["decision"] == "fail", "verifier must FAIL when real tests fail"
+    assert vr["decision"] == "fail"

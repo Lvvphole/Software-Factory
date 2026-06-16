@@ -11,7 +11,7 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Any
-from utils import get_logger, utc_now_iso
+from utils import get_logger, utc_now_iso, cross_platform_run
 
 log = get_logger("agents.testing")
 
@@ -77,8 +77,8 @@ def run(
 
     t0 = time.monotonic()
     try:
-        proc = subprocess.run(cmd, cwd=str(target_repo),
-                              capture_output=True, text=True, timeout=timeout_s)
+        proc = cross_platform_run(cmd, cwd=str(target_repo),
+                                  capture_output=True, text=True, timeout=timeout_s)
         stdout, stderr, code = proc.stdout, proc.stderr, proc.returncode
     except subprocess.TimeoutExpired as e:
         stdout = (e.stdout or b"").decode("utf-8", errors="replace") if isinstance(e.stdout, bytes) else (e.stdout or "")
