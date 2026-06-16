@@ -1,0 +1,15 @@
+{
+  "plan_id": "plan_sample_001",
+  "signal_id": "sig_sample_001",
+  "objective": "Add /healthz endpoint returning ok status",
+  "steps": [
+    {"id": "s1", "agent": "coding", "action": "implement_endpoint", "target": "src/api/health.py"},
+    {"id": "s2", "agent": "testing", "action": "add_unit_test", "target": "tests/test_health.py"},
+    {"id": "s3", "agent": "review", "action": "static_review", "target": "diff"},
+    {"id": "s4", "agent": "security", "action": "scan_diff", "target": "diff"},
+    {"id": "s5", "agent": "documentation", "action": "update_readme", "target": "README.md"}
+  ],
+  "risk_level": "low",
+  "estimated_complexity": "small",
+  "human_approval_required_for": ["production_deploy"]
+}

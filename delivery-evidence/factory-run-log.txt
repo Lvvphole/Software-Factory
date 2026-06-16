@@ -1,0 +1,20 @@
+2026-06-16 04:23:38,291 [INFO] workflows: factory run start: run_1781583818_6ce9fcc5
+2026-06-16 04:23:38,292 [INFO] signals: signal loaded: sig_sample_001 from github_issue
+2026-06-16 04:23:38,292 [INFO] triage: triage complete: tri_sig_sample_001 scope=small
+2026-06-16 04:23:38,292 [INFO] planning: plan built: plan_sig_sample_001 steps=5
+2026-06-16 04:23:38,292 [INFO] router: router decision: mock reason=env default 'mock' and available outcome=ok
+2026-06-16 04:23:38,293 [INFO] governance: governance: action=implement_change allowed=True reason=default-allow
+2026-06-16 04:23:38,293 [INFO] governance: governance: action=implement_change allowed=True reason=default-allow
+2026-06-16 04:23:38,293 [INFO] router: router decision: mock reason=env default 'mock' and available outcome=ok
+2026-06-16 04:23:38,293 [INFO] agents.coding: coding report: code_plan_sig_sample_001 diffs=1
+2026-06-16 04:23:38,293 [INFO] agents.testing: test report: test_plan_sig_sample_001 overall=pass
+2026-06-16 04:23:38,293 [INFO] agents.review: review report: review_plan_sig_sample_001 overall=pass findings=0
+2026-06-16 04:23:38,293 [INFO] agents.security: security report: sec_plan_sig_sample_001 overall=pass issues=0
+2026-06-16 04:23:38,293 [INFO] agents.documentation: documentation report: docs_plan_sig_sample_001 targets=['README.md']
+2026-06-16 04:23:38,299 [INFO] memory: run persisted: run_1781583818_6ce9fcc5 db=.factory-memory/factory.db
+2026-06-16 04:23:38,299 [INFO] workflows: factory run complete: run_1781583818_6ce9fcc5 decision=pass
+{
+  "run_id": "run_1781583818_6ce9fcc5",
+  "run_dir": ".factory-runs/run_1781583818_6ce9fcc5",
+  "verifier_decision": "pass"
+}

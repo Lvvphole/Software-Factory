@@ -1,0 +1,43 @@
+{
+  "db_path": ".factory-memory/factory.db",
+  "db_exists": true,
+  "db_size_bytes": 16384,
+  "row_count": 3,
+  "rows": [
+    {
+      "run_id": "run_1781583818_6ce9fcc5",
+      "signal_id": "sig_sample_001",
+      "plan_id": "plan_sig_sample_001",
+      "verifier_decision": "pass",
+      "started_at": "2026-06-16T04:23:38Z"
+    },
+    {
+      "run_id": "run_1781583815_a92d5c35",
+      "signal_id": "sig_sample_001",
+      "plan_id": "plan_sig_sample_001",
+      "verifier_decision": "pass",
+      "started_at": "2026-06-16T04:23:35Z"
+    },
+    {
+      "run_id": "run_1781583815_406613fd",
+      "signal_id": "sig_sample_001",
+      "plan_id": "plan_sig_sample_001",
+      "verifier_decision": "pass",
+      "started_at": "2026-06-16T04:23:35Z"
+    }
+  ],
+  "sample_record_keys": [
+    "autonomy_level",
+    "completed_at",
+    "governance_decisions",
+    "plan_id",
+    "review_report",
+    "run_id",
+    "security_report",
+    "signal_id",
+    "started_at",
+    "test_report",
+    "verifier_decision"
+  ],
+  "sample_run_id": "run_1781583818_6ce9fcc5"
+}

@@ -1,0 +1,28 @@
+Obtaining file:///home/claude/work/Software-Factory
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: pytest>=7.0 in /usr/local/lib/python3.12/dist-packages (from software-factory==0.1.0) (9.1.0)
+Requirement already satisfied: iniconfig>=1.0.1 in /usr/local/lib/python3.12/dist-packages (from pytest>=7.0->software-factory==0.1.0) (2.3.0)
+Requirement already satisfied: packaging>=22 in /usr/local/lib/python3.12/dist-packages (from pytest>=7.0->software-factory==0.1.0) (26.0)
+Requirement already satisfied: pluggy<2,>=1.5 in /usr/local/lib/python3.12/dist-packages (from pytest>=7.0->software-factory==0.1.0) (1.6.0)
+Requirement already satisfied: pygments>=2.7.2 in /usr/local/lib/python3.12/dist-packages (from pytest>=7.0->software-factory==0.1.0) (2.20.0)
+Checking if build backend supports build_editable: started
+Checking if build backend supports build_editable: finished with status 'done'
+Building wheels for collected packages: software-factory
+  Building editable for software-factory (pyproject.toml): started
+  Building editable for software-factory (pyproject.toml): finished with status 'done'
+  Created wheel for software-factory: filename=software_factory-0.1.0-0.editable-py3-none-any.whl size=14139 sha256=c6000e72acd1fdd96ff454704fd4aaf87edbb42210c00921fa10981a36dbda36
+  Stored in directory: /tmp/pip-ephem-wheel-cache-krlf06hl/wheels/88/e2/ee/ffdc6cbf9b9dafd2b0f9bd502217b3ea3cbf92de47c62c731a
+Successfully built software-factory
+Installing collected packages: software-factory
+  Attempting uninstall: software-factory
+    Found existing installation: software-factory 0.1.0
+    Uninstalling software-factory-0.1.0:
+      Successfully uninstalled software-factory-0.1.0
+Successfully installed software-factory-0.1.0
