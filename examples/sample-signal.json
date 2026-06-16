@@ -1,0 +1,14 @@
+{
+  "signal_id": "sig_sample_001",
+  "source": "github_issue",
+  "source_ref": "https://example.invalid/repo/issues/42",
+  "received_at": "2026-06-15T12:00:00Z",
+  "title": "Add /healthz endpoint to API service",
+  "description": "Service lacks a liveness probe endpoint. Add GET /healthz returning {\"status\":\"ok\"}.",
+  "severity": "medium",
+  "tags": ["api", "observability", "small-change"],
+  "raw_payload": {
+    "labels": ["enhancement", "good-first-issue"],
+    "reporter": "ops-team"
+  }
+}

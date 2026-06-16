@@ -1,0 +1,24 @@
+{
+  "report_id": "verify_run_1781583818_6ce9fcc5",
+  "run_id": "run_1781583818_6ce9fcc5",
+  "decided_at": "2026-06-16T04:23:38Z",
+  "artifact_checks": {
+    "signal.json": true,
+    "triage.json": true,
+    "plan.json": true,
+    "model-routing-log.json": true,
+    "coding-report.json": true,
+    "test-report.json": true,
+    "review-report.json": true,
+    "security-report.json": true,
+    "documentation-report.json": true,
+    "verifier-report.json": true,
+    "final-summary.md": true
+  },
+  "tests_ok": true,
+  "security_ok": true,
+  "review_ok": true,
+  "governance_ok": true,
+  "decision": "pass",
+  "notes": "Verifier ignores coding-agent self-assessment per contract."
+}

@@ -1,0 +1,33 @@
+{
+  "run_id": "run_1781583818_6ce9fcc5",
+  "supported_providers": [
+    "mock",
+    "openai_compatible",
+    "anthropic_compatible",
+    "local_placeholder"
+  ],
+  "entries": [
+    {
+      "timestamp": "2026-06-16T04:23:38Z",
+      "task_kind": "planning",
+      "selected_model": "mock",
+      "selection_reason": "env default 'mock' and available",
+      "cost_estimate_usd": 0.0,
+      "latency_estimate_ms": 1,
+      "fallback_model": "mock",
+      "final_outcome": "ok",
+      "result_summary": "[mock] plan reasoning for plan_sig_sample_001"
+    },
+    {
+      "timestamp": "2026-06-16T04:23:38Z",
+      "task_kind": "coding",
+      "selected_model": "mock",
+      "selection_reason": "env default 'mock' and available",
+      "cost_estimate_usd": 0.0,
+      "latency_estimate_ms": 1,
+      "fallback_model": "mock",
+      "final_outcome": "ok",
+      "result_summary": "[mock] draft change for step s1: implement_change"
+    }
+  ]
+}

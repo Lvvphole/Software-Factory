@@ -1,0 +1,22 @@
+{
+  "run_id": "run_sample_001",
+  "signal_id": "sig_sample_001",
+  "plan_id": "plan_sample_001",
+  "started_at": "2026-06-15T12:00:01Z",
+  "completed_at": "2026-06-15T12:00:09Z",
+  "stages": [
+    {"name": "signal_intake", "status": "ok"},
+    {"name": "triage", "status": "ok"},
+    {"name": "planning", "status": "ok"},
+    {"name": "model_routing", "status": "ok"},
+    {"name": "coding", "status": "ok"},
+    {"name": "testing", "status": "ok"},
+    {"name": "review", "status": "ok"},
+    {"name": "security", "status": "ok"},
+    {"name": "documentation", "status": "ok"},
+    {"name": "verifier", "status": "ok"}
+  ],
+  "verifier_decision": "pass",
+  "autonomy_level": 2,
+  "human_approval_required": false
+}
