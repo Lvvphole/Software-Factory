@@ -1,0 +1,51 @@
+{
+  "report_id": "code_plan_sig_demo_001",
+  "plan_id": "plan_sig_demo_001",
+  "created_at": "2026-06-16T14:41:23Z",
+  "executor": "claude_code",
+  "target_repo": "/home/claude/v1.1-build/Software-Factory/examples/demo-target",
+  "diffs": [
+    {
+      "step_id": "s1",
+      "status": "executed",
+      "target": "src/<inferred>",
+      "executor": "claude_code",
+      "exit_code": 0,
+      "diff_size_bytes": 494,
+      "files_touched": [
+        "src/calculator/__init__.py"
+      ],
+      "duration_ms": 29,
+      "error": null
+    }
+  ],
+  "diff_size_bytes": 494,
+  "files_touched": [
+    "src/calculator/__init__.py"
+  ],
+  "model_used": "claude-stub",
+  "cost_usd": 0.0,
+  "primary_executor_result": {
+    "executor": "claude_code",
+    "exit_code": 0,
+    "duration_ms": 29,
+    "stdout": "{\"result\": \"fixed add() in src/calculator/__init__.py to return a + b\", \"session_id\": \"stub-demo-001\", \"model\": \"claude-stub\", \"total_cost_usd\": 0.0, \"num_turns\": 1}\n",
+    "stderr": "",
+    "diff_size_bytes": 494,
+    "files_touched": [
+      "src/calculator/__init__.py"
+    ],
+    "model_used": "claude-stub",
+    "cost_usd": 0.0,
+    "error": null,
+    "raw": {
+      "result": "fixed add() in src/calculator/__init__.py to return a + b",
+      "session_id": "stub-demo-001",
+      "model": "claude-stub",
+      "total_cost_usd": 0.0,
+      "num_turns": 1
+    }
+  },
+  "self_assessment": "executed",
+  "note": "Coding agent self-assessment is non-authoritative. Verifier decides outcome."
+}

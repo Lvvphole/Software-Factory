@@ -1,0 +1,24 @@
+2026-06-16 14:41:23,449 [INFO] workflows: factory run start: run_1781620883_d44d1d4e executor=claude_code target=examples/demo-target
+2026-06-16 14:41:23,449 [INFO] signals: signal loaded: sig_demo_001 from manual
+2026-06-16 14:41:23,449 [INFO] triage: triage complete: tri_sig_demo_001 scope=small
+2026-06-16 14:41:23,449 [INFO] planning: plan built: plan_sig_demo_001 steps=5
+2026-06-16 14:41:23,454 [INFO] governance: preflight: target_repo OK branch=feature/factory clean=True
+2026-06-16 14:41:23,454 [INFO] governance: governance: action=implement_change allowed=True reason=default-allow
+2026-06-16 14:41:23,454 [INFO] governance: governance: action=implement_change allowed=True reason=default-allow
+2026-06-16 14:41:23,483 [INFO] agents.coding: coding report: code_plan_sig_demo_001 executor=claude_code diff_bytes=494 files=1
+2026-06-16 14:41:23,691 [INFO] agents.testing: test report: test_plan_sig_demo_001 mode=real exit=0 overall=pass
+2026-06-16 14:41:23,692 [INFO] agents.review: review report: review_plan_sig_demo_001 overall=pass findings=0
+2026-06-16 14:41:23,692 [INFO] agents.security: security report: sec_plan_sig_demo_001 overall=pass issues=0
+2026-06-16 14:41:23,692 [INFO] agents.documentation: documentation report: docs_plan_sig_demo_001 targets=['README.md']
+2026-06-16 14:41:23,692 [INFO] router: router decision: mock reason=env default 'mock' and available outcome=ok
+2026-06-16 14:41:23,701 [INFO] memory: run persisted: run_1781620883_d44d1d4e db=.factory-memory/factory.db
+2026-06-16 14:41:23,701 [INFO] workflows: factory run complete: run_1781620883_d44d1d4e decision=pass
+{
+  "run_id": "run_1781620883_d44d1d4e",
+  "run_dir": ".factory-runs/run_1781620883_d44d1d4e",
+  "executor": "claude_code",
+  "grading_mode": "capability",
+  "verifier_decision": "pass",
+  "tests_exit_code": 0,
+  "diff_size_bytes": 494
+}

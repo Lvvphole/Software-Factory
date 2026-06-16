@@ -1,0 +1,25 @@
+2026-06-16 14:41:02,507 [INFO] workflows: factory run start: run_1781620862_6ec668e3 executor=mock target=None
+2026-06-16 14:41:02,508 [INFO] signals: signal loaded: sig_sample_001 from github_issue
+2026-06-16 14:41:02,508 [INFO] triage: triage complete: tri_sig_sample_001 scope=small
+2026-06-16 14:41:02,508 [INFO] planning: plan built: plan_sig_sample_001 steps=5
+2026-06-16 14:41:02,508 [INFO] governance: preflight: no target_repo (mock-only run allowed)
+2026-06-16 14:41:02,508 [INFO] governance: governance: action=implement_change allowed=True reason=default-allow
+2026-06-16 14:41:02,509 [INFO] governance: governance: action=implement_change allowed=True reason=default-allow
+2026-06-16 14:41:02,509 [INFO] agents.coding: coding report: code_plan_sig_sample_001 executor=mock diff_bytes=0 files=0
+2026-06-16 14:41:02,509 [INFO] agents.testing: test report: test_plan_sig_sample_001 mode=synthetic overall=pass
+2026-06-16 14:41:02,509 [INFO] agents.review: review report: review_plan_sig_sample_001 overall=pass findings=0
+2026-06-16 14:41:02,509 [INFO] agents.security: security report: sec_plan_sig_sample_001 overall=pass issues=0
+2026-06-16 14:41:02,509 [INFO] agents.documentation: documentation report: docs_plan_sig_sample_001 targets=['README.md']
+2026-06-16 14:41:02,509 [INFO] router: router decision: mock reason=env default 'mock' and available outcome=ok
+2026-06-16 14:41:02,529 [INFO] memory: memory migration: added columns ['target_repo', 'executor', 'tests_passed', 'diff_size_bytes']
+2026-06-16 14:41:02,532 [INFO] memory: run persisted: run_1781620862_6ec668e3 db=.factory-memory/factory.db
+2026-06-16 14:41:02,532 [INFO] workflows: factory run complete: run_1781620862_6ec668e3 decision=pass
+{
+  "run_id": "run_1781620862_6ec668e3",
+  "run_dir": ".factory-runs/run_1781620862_6ec668e3",
+  "executor": "mock",
+  "grading_mode": "artifact",
+  "verifier_decision": "pass",
+  "tests_exit_code": 0,
+  "diff_size_bytes": 0
+}

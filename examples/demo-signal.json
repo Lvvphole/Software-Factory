@@ -1,0 +1,14 @@
+{
+  "signal_id": "sig_demo_001",
+  "source": "manual",
+  "source_ref": "examples/demo-target",
+  "received_at": "2026-06-16T12:00:00Z",
+  "title": "Fix add() in demo-calculator — tests failing",
+  "description": "The function `add(a, b)` in src/calculator/__init__.py returns subtraction instead of addition. Change the implementation so it returns the sum. Do not modify any test files or other modules.",
+  "severity": "medium",
+  "tags": ["bug", "small-change"],
+  "raw_payload": {
+    "target_file": "src/calculator/__init__.py",
+    "failing_tests": ["test_add"]
+  }
+}

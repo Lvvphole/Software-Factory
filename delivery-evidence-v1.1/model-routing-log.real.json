@@ -1,0 +1,37 @@
+{
+  "run_id": "run_1781620883_d44d1d4e",
+  "supported_providers": [
+    "mock",
+    "openai_compatible",
+    "anthropic_compatible",
+    "local_placeholder"
+  ],
+  "supported_executors": [
+    "mock",
+    "claude_code"
+  ],
+  "entries": [
+    {
+      "timestamp": "2026-06-16T14:41:23Z",
+      "task_kind": "coding",
+      "executor": "claude_code",
+      "selected_model": "claude-stub",
+      "selection_reason": "--executor claude_code",
+      "cost_estimate_usd": 0.0,
+      "latency_estimate_ms": 29,
+      "fallback_model": "mock",
+      "final_outcome": "ok"
+    },
+    {
+      "timestamp": "2026-06-16T14:41:23Z",
+      "task_kind": "planning",
+      "selected_model": "mock",
+      "selection_reason": "env default 'mock' and available",
+      "cost_estimate_usd": 0.0,
+      "latency_estimate_ms": 1,
+      "fallback_model": "mock",
+      "final_outcome": "ok",
+      "result_summary": "[mock] plan reasoning for plan_sig_demo_001"
+    }
+  ]
+}
