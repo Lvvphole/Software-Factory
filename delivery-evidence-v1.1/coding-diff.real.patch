@@ -1,0 +1,16 @@
+diff --git a/src/calculator/__init__.py b/src/calculator/__init__.py
+index 0737ad1..b45becc 100644
+--- a/src/calculator/__init__.py
++++ b/src/calculator/__init__.py
+@@ -1,9 +1,8 @@
+-"""Tiny calculator. Contains a deliberate bug for the Software Factory demo."""
++"""Tiny calculator. Bug fixed by Software Factory demo."""
+ 
+ 
+ def add(a: int, b: int) -> int:
+-    # BUG: should be a + b. Coding executor should fix this.
+-    return a - b
++    return a + b
+ 
+ 
+ def mul(a: int, b: int) -> int:
