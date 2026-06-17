@@ -88,3 +88,15 @@ claude --print --bare --output-format json --max-turns N \
 ## Testing without a real `claude` binary
 
 Set `CLAUDE_CODE_BIN` to a stub script. The integration tests in `tests/test_executor_claude_code.py` and `tests/test_workflow_v1_1.py` use this pattern. No API key needed.
+
+## v1.2 — failure_context contract
+
+When the workflow retries after failed real tests, the coding agent passes a `failure_context` dict to the executor through the prompt. Production executors (and CI-stub executors) should:
+
+1. Detect retry via the sentinel `"PREVIOUS ATTEMPT FAILED"` at the head of the prompt.
+2. Read prior attempts' diff stats, test command, exit code, stdout/stderr tails embedded in the prompt.
+3. Respond by producing a different diff that addresses the failure mode.
+
+The harness writes one full coding-report + test-report per attempt and a top-level `iteration-report.json`. The verifier only ever grades the final attempt.
+
+Mock executor never iterates.

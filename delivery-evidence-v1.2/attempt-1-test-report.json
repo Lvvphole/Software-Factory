@@ -1,0 +1,18 @@
+{
+  "report_id": "test_plan_sig_demo_001",
+  "plan_id": "plan_sig_demo_001",
+  "created_at": "2026-06-17T00:30:16Z",
+  "mode": "real",
+  "cmd": [
+    "/usr/bin/python3",
+    "-m",
+    "pytest",
+    "-q"
+  ],
+  "exit_code": 2,
+  "duration_ms": 300,
+  "stdout_tail": "\n==================================== ERRORS ====================================\n__________________ ERROR collecting tests/test_calculator.py ___________________\nImportError while importing test module '/home/claude/v1.1-build/Software-Factory/examples/demo-target/tests/test_calculator.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_calculator.py:1: in <module>\n    from calculator import add, mul\nE   ImportError: cannot import name 'mul' from 'calculator' (/home/claude/v1.1-build/Software-Factory/examples/demo-target/src/calculator/__init__.py)\n=========================== short test summary info ============================\nERROR tests/test_calculator.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.09s\n",
+  "stderr_tail": "",
+  "overall": "fail",
+  "attempt_number": 1
+}

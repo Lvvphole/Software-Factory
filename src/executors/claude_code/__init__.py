@@ -19,7 +19,7 @@ import subprocess
 import time
 from pathlib import Path
 from ..base import ExecutorResult
-from utils import cross_platform_run
+from utils import cross_platform_run, sanitize_prompt_for_shell
 
 
 class ClaudeCodeExecutor:
@@ -72,7 +72,7 @@ class ClaudeCodeExecutor:
         ]
         if allowed_tools:
             cmd += ["--allowedTools", ",".join(allowed_tools)]
-        cmd.append(prompt)
+        cmd.append(sanitize_prompt_for_shell(prompt))
 
         try:
             proc = cross_platform_run(

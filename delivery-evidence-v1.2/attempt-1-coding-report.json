@@ -1,0 +1,51 @@
+{
+  "report_id": "code_plan_sig_demo_001_a1",
+  "plan_id": "plan_sig_demo_001",
+  "attempt_number": 1,
+  "is_retry": true,
+  "created_at": "2026-06-17T00:30:16Z",
+  "executor": "claude_code",
+  "target_repo": "/home/claude/v1.1-build/Software-Factory/examples/demo-target",
+  "diffs": [
+    {
+      "step_id": "s1",
+      "status": "executed",
+      "target": "src/<inferred>",
+      "executor": "claude_code",
+      "exit_code": 0,
+      "diff_size_bytes": 469,
+      "files_touched": [
+        "src/calculator/__init__.py"
+      ],
+      "duration_ms": 30,
+      "error": null
+    }
+  ],
+  "diff_size_bytes": 469,
+  "files_touched": [
+    "src/calculator/__init__.py"
+  ],
+  "model_used": "claude-stub",
+  "cost_usd": 0.0,
+  "primary_executor_result": {
+    "executor": "claude_code",
+    "exit_code": 0,
+    "duration_ms": 30,
+    "stdout": "{\"result\": \"retry\", \"model\": \"claude-stub\", \"total_cost_usd\": 0.0}\n",
+    "stderr": "",
+    "diff_size_bytes": 469,
+    "files_touched": [
+      "src/calculator/__init__.py"
+    ],
+    "model_used": "claude-stub",
+    "cost_usd": 0.0,
+    "error": null,
+    "raw": {
+      "result": "retry",
+      "model": "claude-stub",
+      "total_cost_usd": 0.0
+    }
+  },
+  "self_assessment": "executed",
+  "note": "Coding agent self-assessment is non-authoritative. Verifier decides outcome."
+}

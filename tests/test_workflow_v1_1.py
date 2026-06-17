@@ -101,6 +101,10 @@ def test_full_run_with_stub_claude_passes(tmp_path, monkeypatch):
     assert vr["diff_size_bytes"] > 0
     assert vr["decision"] == "pass"
     assert (Path(result["run_dir"]) / "coding-diff.patch").exists()
+    # v1.2: per-attempt + iteration artifacts
+    assert (Path(result["run_dir"]) / "attempt-0-coding-report.json").exists()
+    assert (Path(result["run_dir"]) / "attempt-0-test-report.json").exists()
+    assert (Path(result["run_dir"]) / "iteration-report.json").exists()
 
 
 def test_full_run_with_stub_that_fails_still_grades_fail(tmp_path, monkeypatch):

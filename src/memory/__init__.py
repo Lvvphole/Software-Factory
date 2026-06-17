@@ -35,12 +35,16 @@ V1_1_COLUMNS = [
     ("diff_size_bytes", "INTEGER"),
 ]
 
+V1_2_COLUMNS = [
+    ("attempts_used", "INTEGER"),
+]
+
 
 def _migrate(conn: sqlite3.Connection) -> list[str]:
-    """Add v1.1 columns if missing. Returns the list of columns added."""
+    """Add v1.1/v1.2 columns if missing. Returns the list of columns added."""
     added: list[str] = []
     existing = {r[1] for r in conn.execute("PRAGMA table_info(runs)").fetchall()}
-    for name, kind in V1_1_COLUMNS:
+    for name, kind in V1_1_COLUMNS + V1_2_COLUMNS:
         if name not in existing:
             conn.execute(f"ALTER TABLE runs ADD COLUMN {name} {kind}")
             added.append(name)
@@ -66,8 +70,9 @@ def persist_run(run_record: dict[str, Any], db_path: str | Path | None = None) -
             """INSERT OR REPLACE INTO runs
                (run_id, signal_id, plan_id, started_at, completed_at,
                 verifier_decision, payload_json,
-                target_repo, executor, tests_passed, diff_size_bytes)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                target_repo, executor, tests_passed, diff_size_bytes,
+                attempts_used)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 run_record["run_id"],
                 run_record.get("signal_id"),
@@ -80,6 +85,7 @@ def persist_run(run_record: dict[str, Any], db_path: str | Path | None = None) -
                 run_record.get("executor"),
                 1 if (run_record.get("test_report") or {}).get("overall") == "pass" else 0,
                 (run_record.get("coding_report") or {}).get("diff_size_bytes", 0),
+                run_record.get("attempts_used", 1),
             ),
         )
         conn.commit()

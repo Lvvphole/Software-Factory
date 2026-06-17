@@ -25,6 +25,10 @@ def main(argv: list[str] | None = None) -> int:
                        help="allow target_repo with uncommitted changes")
     p_run.add_argument("--allow-protected-branch", action="store_true",
                        help="allow target_repo on main/master/etc.")
+    # v1.2
+    p_run.add_argument("--max-attempts", type=int, default=2,
+                       help="maximum executor attempts when real tests fail (default: 2). "
+                            "Only takes effect with a non-mock executor and a target_repo.")
 
     args = parser.parse_args(argv)
 
@@ -39,6 +43,7 @@ def main(argv: list[str] | None = None) -> int:
                 test_cmd=args.test_cmd.split() if args.test_cmd else None,
                 allow_dirty=args.allow_dirty,
                 allow_protected_branch=args.allow_protected_branch,
+                max_attempts=args.max_attempts,
             )
             print(json.dumps({
                 "run_id": result["run_id"],
@@ -48,6 +53,7 @@ def main(argv: list[str] | None = None) -> int:
                 "verifier_decision": result["verifier"]["decision"],
                 "tests_exit_code": result["verifier"]["tests_exit_code"],
                 "diff_size_bytes": result["verifier"]["diff_size_bytes"],
+                "attempts_used": result["attempts_used"],
             }, indent=2))
             return 0 if result["verifier"]["decision"] == "pass" else 2
         except Exception as e:
