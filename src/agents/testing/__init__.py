@@ -8,6 +8,7 @@ Overridable via test_cmd parameter.
 """
 from __future__ import annotations
 import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -18,7 +19,11 @@ log = get_logger("agents.testing")
 
 def detect_test_cmd(target_repo: Path) -> list[str]:
     if (target_repo / "pyproject.toml").exists() or (target_repo / "setup.py").exists():
-        return ["pytest", "-q"]
+        # Use `python -m pytest` rather than bare `pytest` so it works
+        # regardless of whether pytest.exe is on PATH (it often isn't on
+        # Windows when invoked via shell). sys.executable resolves to the
+        # current interpreter on both platforms.
+        return [sys.executable, "-m", "pytest", "-q"]
     if (target_repo / "package.json").exists():
         return ["npm", "test", "--silent"]
     return []
