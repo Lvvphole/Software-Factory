@@ -31,6 +31,25 @@ def cross_platform_run(cmd_list: list[str], **kwargs: Any) -> subprocess.Complet
     return subprocess.run(cmd_list, **kwargs)
 
 
+def sanitize_prompt_for_shell(prompt: str) -> str:
+    """Make a multi-line prompt safe to pass through ``cmd.exe /c`` on Windows.
+
+    When subprocess.run is invoked with ``shell=True`` on Windows, Python wraps
+    the command line in ``cmd.exe /c "..."``. cmd.exe treats newlines as command
+    terminators **even inside double-quoted strings**, so any argv argument that
+    contains ``\\n`` gets truncated at the first newline and the rest of the
+    prompt is dropped. This affects every multi-line prompt the coding agent
+    builds, both first-attempt and retry.
+
+    On Windows, this helper replaces newlines with a visible separator that
+    preserves semantic structure so the receiving executor (real Claude Code
+    or test stub) sees the full prompt. On POSIX, returns the prompt unchanged.
+    """
+    if sys.platform != "win32":
+        return prompt
+    return prompt.replace("\r\n", " || ").replace("\n", " || ").replace("\r", " || ")
+
+
 def new_run_id() -> str:
     return f"run_{int(time.time())}_{uuid.uuid4().hex[:8]}"
 
