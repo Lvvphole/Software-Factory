@@ -39,3 +39,28 @@ Stored under `.factory-runs/{run_id}/` — see README. The set is fixed; the ver
 - No real file edits (dry-run intent only).
 - No production deploys (governance blocks by name).
 - No destructive shell (governance blocks by pattern).
+
+## v1.2 — Iteration on failure
+
+After the testing agent runs, if (a) executor is non-mock, (b) a target_repo is set, (c) real tests failed, (d) `attempts_used < max_attempts`, and (e) governance allows, the workflow re-invokes the coding agent with a structured **failure_context**:
+
+```json
+{
+  "attempt_number": 1,
+  "previous_attempts": [
+    {
+      "attempt": 0,
+      "diff_size_bytes": 240,
+      "files_touched": ["src/calc.py"],
+      "test_cmd": ["python", "-m", "pytest", "-q"],
+      "test_exit_code": 1,
+      "test_stdout_tail": "...",
+      "test_stderr_tail": "..."
+    }
+  ]
+}
+```
+
+The coding agent embeds this into the executor prompt (prefixed with `PREVIOUS ATTEMPT FAILED — this is attempt #N.`). Each attempt writes `attempt-{n}-coding-report.json` and `attempt-{n}-test-report.json`. The final attempt is mirrored to `coding-report.json` / `test-report.json` for backward compatibility. The whole loop is summarized in `iteration-report.json`.
+
+The verifier still grades the **final** attempt only: `pass` requires real `tests_exit_code == 0`, non-empty diff, all artifacts present. Mock executor still runs exactly one attempt (no retry).

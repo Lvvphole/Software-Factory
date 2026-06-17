@@ -1,0 +1,34 @@
+{
+  "report_id": "iter_run_1781656216_46be1406",
+  "run_id": "run_1781656216_46be1406",
+  "executor": "claude_code",
+  "max_attempts_configured": 2,
+  "max_attempts_effective": 2,
+  "attempts_used": 2,
+  "retry_enabled": true,
+  "attempts": [
+    {
+      "attempt_number": 0,
+      "is_retry": false,
+      "diff_size_bytes": 478,
+      "files_touched": [
+        "src/calculator/__init__.py"
+      ],
+      "test_exit_code": 2,
+      "test_overall": "fail"
+    },
+    {
+      "attempt_number": 1,
+      "is_retry": true,
+      "diff_size_bytes": 469,
+      "files_touched": [
+        "src/calculator/__init__.py"
+      ],
+      "test_exit_code": 2,
+      "test_overall": "fail"
+    }
+  ],
+  "final_test_exit_code": 2,
+  "final_overall": "fail",
+  "note": "Verifier grades on the final attempt's outcome."
+}

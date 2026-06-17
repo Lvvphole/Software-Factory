@@ -1,8 +1,8 @@
-# Software Factory (v1.1)
+# Software Factory (v1.2)
 
 A coding-agent **harness** that converts external signals into planned, built, tested, reviewed, secured, documented, and memory-backed software changes. The harness owns lifecycle, governance, routing, memory, and the verifier; an **executor** (Claude Code by default in real runs; mock for CI) does the actual coding work.
 
-> **v1.1 scope:** make exactly one end-to-end real run work — Claude Code edits a target repo, real tests run on the real diff, the verifier grades on capability (tests-pass + non-empty diff + artifacts) rather than artifact presence.
+> **v1.2 scope:** add a bounded **retry loop**. When real tests fail on a real executor, the harness feeds the failure context back to the executor and tries again. Verifier still grades the final attempt mechanically.
 
 ## Quickstart
 
@@ -29,7 +29,8 @@ cd ../..
 factory run \
   --signal examples/demo-signal.json \
   --target-repo examples/demo-target \
-  --executor claude_code
+  --executor claude_code \
+  --max-attempts 2          # v1.2: retry up to 2 attempts if tests fail
 ```
 
 The factory writes 11 artifacts plus `coding-diff.patch` (the real diff) to `.factory-runs/{run_id}/`. The diff is left **uncommitted** in the target repo's working tree — you decide whether to commit/PR/discard.
@@ -93,4 +94,4 @@ docs/    examples/{demo-target/,*.json}   scripts/    tests/
 
 ## Status
 
-v1.1 — Claude Code is the executor; harness owns the loop. No iteration-on-failure yet (deferred to v1.2). Default autonomy=2. No production-deploy automation.
+v1.2 — bounded retry loop on real tests. Real executor + capability grading. Default autonomy=2, default max_attempts=2. No production-deploy automation.

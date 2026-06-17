@@ -1,0 +1,31 @@
+{
+  "report_id": "verify_run_1781656216_46be1406",
+  "run_id": "run_1781656216_46be1406",
+  "decided_at": "2026-06-17T00:30:17Z",
+  "executor": "claude_code",
+  "grading_mode": "capability",
+  "artifact_checks": {
+    "signal.json": true,
+    "triage.json": true,
+    "plan.json": true,
+    "model-routing-log.json": true,
+    "coding-report.json": true,
+    "test-report.json": true,
+    "review-report.json": true,
+    "security-report.json": true,
+    "documentation-report.json": true,
+    "verifier-report.json": true,
+    "final-summary.md": true,
+    "iteration-report.json": true
+  },
+  "tests_exit_code": 2,
+  "tests_ok": false,
+  "diff_size_bytes": 469,
+  "diff_non_empty": true,
+  "security_ok": true,
+  "review_ok": true,
+  "governance_ok": true,
+  "attempts_used": 2,
+  "decision": "fail",
+  "notes": "Real executor 'claude_code' \u2014 verifier grades on tests-pass + non-empty diff + artifact set across 2 attempt(s). Coding-agent self-assessment is ignored."
+}

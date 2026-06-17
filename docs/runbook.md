@@ -58,3 +58,19 @@ Every failure should leave evidence:
 ## Production deploys
 
 **Not automated in v1.** `production_deploy` is in `BLOCKED_ACTIONS` and rejected by governance with `requires_human_approval=true`. A human must run the deploy out-of-band.
+
+## v1.2 — tuning retries
+
+`--max-attempts N` controls the upper bound (default 2). Only takes effect when:
+- `--executor` is non-mock
+- `--target-repo` is supplied
+- governance approves each retry
+
+Inspect a run's retry behavior:
+```bash
+cat .factory-runs/<run_id>/iteration-report.json | python -m json.tool
+```
+
+The `attempts` array lists per-attempt diff size, files touched, and test exit code. `final_overall` is what the verifier graded.
+
+Cost control: each retry triggers another executor invocation. Cap with `--max-attempts 1` to disable retries; cap with a smaller `--max-attempts` to bound cost on a fragile target.

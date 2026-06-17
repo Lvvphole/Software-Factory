@@ -1,0 +1,18 @@
+{
+  "report_id": "test_plan_sig_demo_001",
+  "plan_id": "plan_sig_demo_001",
+  "created_at": "2026-06-17T00:29:14Z",
+  "mode": "real",
+  "cmd": [
+    "/usr/bin/python3",
+    "-m",
+    "pytest",
+    "-q"
+  ],
+  "exit_code": 0,
+  "duration_ms": 230,
+  "stdout_tail": "..                                                                       [100%]\n2 passed in 0.01s\n",
+  "stderr_tail": "",
+  "overall": "pass",
+  "attempt_number": 0
+}
