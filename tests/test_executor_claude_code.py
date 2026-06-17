@@ -2,31 +2,30 @@
 
 The stub mimics `claude --print --bare ...` by making a deterministic file edit
 in cwd (the target_repo) and emitting valid JSON on stdout. No real API call.
+Cross-platform via tests/_stub_claude.py.
 """
 from __future__ import annotations
 import os
 import subprocess
-import stat
 import sys
 import textwrap
 from pathlib import Path
 import pytest
 from executors import get_executor
+from _stub_claude import make_claude_wrapper
 
 
-def _make_stub(tmp_path: Path, edit_file: str = "src/calculator/__init__.py",
-               new_content: str = '"""Stubbed."""\n\ndef add(a, b):\n    return a + b\n\ndef mul(a, b):\n    return a * b\n') -> Path:
-    """Create a stub `claude` shim that edits a file and emits JSON."""
+def _make_fix_stub(tmp_path: Path,
+                   edit_file: str = "src/calculator/__init__.py",
+                   new_content: str = '"""Stubbed."""\n\ndef add(a, b):\n    return a + b\n\ndef mul(a, b):\n    return a * b\n') -> Path:
     stub = tmp_path / "claude_stub.py"
     stub.write_text(textwrap.dedent(f"""
         #!/usr/bin/env python3
         import json, os, sys
-        # Apply a deterministic edit in cwd (the target_repo)
         target = os.path.join(os.getcwd(), {edit_file!r})
         os.makedirs(os.path.dirname(target), exist_ok=True)
-        with open(target, "w") as f:
+        with open(target, "w", newline="\\n") as f:
             f.write({new_content!r})
-        # Emit a json shape resembling claude -p --output-format json
         out = {{
             "result": "fixed add() to return a + b",
             "session_id": "stub-session",
@@ -37,10 +36,7 @@ def _make_stub(tmp_path: Path, edit_file: str = "src/calculator/__init__.py",
         print(json.dumps(out))
         sys.exit(0)
     """).strip())
-    wrapper = tmp_path / "claude"
-    wrapper.write_text(f"#!/usr/bin/env bash\nexec {sys.executable} {stub} \"$@\"\n")
-    wrapper.chmod(0o755)
-    return wrapper
+    return make_claude_wrapper(tmp_path, stub)
 
 
 def _make_failing_stub(tmp_path: Path) -> Path:
@@ -51,14 +47,10 @@ def _make_failing_stub(tmp_path: Path) -> Path:
         print("simulated error", file=sys.stderr)
         sys.exit(2)
     """).strip())
-    wrapper = tmp_path / "claude"
-    wrapper.write_text(f"#!/usr/bin/env bash\nexec {sys.executable} {stub} \"$@\"\n")
-    wrapper.chmod(0o755)
-    return wrapper
+    return make_claude_wrapper(tmp_path, stub)
 
 
 def _init_target_repo(repo: Path) -> None:
-    """Create a minimal git repo with one initial commit."""
     repo.mkdir(parents=True, exist_ok=True)
     (repo / "src" / "calculator").mkdir(parents=True)
     (repo / "src" / "calculator" / "__init__.py").write_text(
@@ -75,7 +67,7 @@ def _init_target_repo(repo: Path) -> None:
 
 def test_missing_binary_returns_127(tmp_path, monkeypatch):
     monkeypatch.delenv("CLAUDE_CODE_BIN", raising=False)
-    monkeypatch.setenv("PATH", "/nonexistent")
+    monkeypatch.setenv("PATH", "/nonexistent" if sys.platform != "win32" else "C:\\nonexistent")
     ex = get_executor("claude_code")
     r = ex.invoke(prompt="x", target_repo=tmp_path,
                   allowed_tools=["Read"], timeout_s=5)
@@ -86,8 +78,8 @@ def test_missing_binary_returns_127(tmp_path, monkeypatch):
 def test_stub_invocation_produces_real_diff(tmp_path, monkeypatch):
     repo = tmp_path / "target"
     _init_target_repo(repo)
-    stub = _make_stub(tmp_path)
-    monkeypatch.setenv("CLAUDE_CODE_BIN", str(stub))
+    wrapper = _make_fix_stub(tmp_path)
+    monkeypatch.setenv("CLAUDE_CODE_BIN", str(wrapper))
 
     ex = get_executor("claude_code")
     r = ex.invoke(
@@ -97,7 +89,7 @@ def test_stub_invocation_produces_real_diff(tmp_path, monkeypatch):
         timeout_s=15,
     )
     assert r.executor == "claude_code"
-    assert r.exit_code == 0
+    assert r.exit_code == 0, f"executor failed: stderr={r.stderr!r} error={r.error!r}"
     assert r.diff_size_bytes > 0, "expected a real git diff after stub edit"
     assert "src/calculator/__init__.py" in r.files_touched
     assert r.model_used == "claude-stub"
@@ -106,8 +98,8 @@ def test_stub_invocation_produces_real_diff(tmp_path, monkeypatch):
 def test_stub_failure_propagates_exit_code(tmp_path, monkeypatch):
     repo = tmp_path / "target"
     _init_target_repo(repo)
-    stub = _make_failing_stub(tmp_path)
-    monkeypatch.setenv("CLAUDE_CODE_BIN", str(stub))
+    wrapper = _make_failing_stub(tmp_path)
+    monkeypatch.setenv("CLAUDE_CODE_BIN", str(wrapper))
 
     ex = get_executor("claude_code")
     r = ex.invoke(prompt="anything", target_repo=repo,

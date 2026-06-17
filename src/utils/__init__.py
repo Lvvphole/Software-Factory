@@ -3,10 +3,32 @@ from __future__ import annotations
 import json
 import logging
 import os
+import subprocess
+import sys
 import time
 import uuid
 from pathlib import Path
 from typing import Any
+
+
+def cross_platform_run(cmd_list: list[str], **kwargs: Any) -> subprocess.CompletedProcess:
+    """Run a command list reliably across Windows and Unix.
+
+    Windows CreateProcess only executes PE binaries directly; it can't run
+    .cmd/.bat shims (npm installs `claude.cmd`), and PATHEXT resolution
+    only happens when the shell is involved. Paths containing spaces
+    (e.g., `C:\\Users\\Emory Harris\\...`) also need explicit quoting.
+
+    On Windows we route through cmd.exe via shell=True, pre-quoting the
+    arg vector with `list2cmdline` so the prompt and args remain
+    well-formed even when they contain spaces or quotes. On Unix we keep
+    the explicit argv form (safer, no shell interpretation).
+    """
+    if sys.platform == "win32":
+        cmd_str = subprocess.list2cmdline(cmd_list)
+        kwargs["shell"] = True
+        return subprocess.run(cmd_str, **kwargs)
+    return subprocess.run(cmd_list, **kwargs)
 
 
 def new_run_id() -> str:

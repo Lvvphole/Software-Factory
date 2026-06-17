@@ -19,6 +19,7 @@ import subprocess
 import time
 from pathlib import Path
 from ..base import ExecutorResult
+from utils import cross_platform_run
 
 
 class ClaudeCodeExecutor:
@@ -74,7 +75,7 @@ class ClaudeCodeExecutor:
         cmd.append(prompt)
 
         try:
-            proc = subprocess.run(
+            proc = cross_platform_run(
                 cmd, cwd=str(target_repo),
                 capture_output=True, text=True, timeout=timeout_s,
                 env={**os.environ},  # ANTHROPIC_API_KEY must already be set
