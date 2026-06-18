@@ -70,6 +70,68 @@ def write_json(path: Path, payload: dict[str, Any]) -> Path:
     return path
 
 
+def parse_unified_diff(diff_text: str) -> dict[str, Any]:
+    """Parse a `git diff` unified patch into a structured form.
+
+    Returns:
+      {
+        "files": [
+          {"path": "<new path>", "old_path": "<old path>",
+           "added_lines": [str, ...],     # content of '+' lines (no prefix)
+           "removed_lines": [str, ...],   # content of '-' lines (no prefix)
+           "is_new": bool, "is_deleted": bool}
+        ],
+        "added_total": int,
+        "removed_total": int,
+      }
+
+    Deterministic, dependency-free. Only the line CONTENT is captured (the
+    leading +/- is stripped) so agents can scan exactly what was introduced.
+    Diff metadata lines (+++/---) are excluded from added/removed content.
+    """
+    files: list[dict[str, Any]] = []
+    cur: dict[str, Any] | None = None
+    added_total = 0
+    removed_total = 0
+
+    for line in diff_text.splitlines():
+        if line.startswith("diff --git"):
+            if cur is not None:
+                files.append(cur)
+            cur = {"path": None, "old_path": None, "added_lines": [],
+                   "removed_lines": [], "is_new": False, "is_deleted": False}
+            continue
+        if cur is None:
+            continue
+        if line.startswith("new file mode"):
+            cur["is_new"] = True
+        elif line.startswith("deleted file mode"):
+            cur["is_deleted"] = True
+        elif line.startswith("--- "):
+            p = line[4:].strip()
+            cur["old_path"] = None if p == "/dev/null" else p[2:] if p.startswith("a/") else p
+        elif line.startswith("+++ "):
+            p = line[4:].strip()
+            cur["path"] = None if p == "/dev/null" else p[2:] if p.startswith("b/") else p
+        elif line.startswith("+") and not line.startswith("+++"):
+            cur["added_lines"].append(line[1:])
+            added_total += 1
+        elif line.startswith("-") and not line.startswith("---"):
+            cur["removed_lines"].append(line[1:])
+            removed_total += 1
+
+    if cur is not None:
+        files.append(cur)
+
+    # Fall back path name to old_path when needed (renames/deletes).
+    for f in files:
+        if not f["path"]:
+            f["path"] = f["old_path"]
+
+    return {"files": files, "added_total": added_total,
+            "removed_total": removed_total}
+
+
 def read_json(path: Path) -> dict[str, Any]:
     return json.loads(Path(path).read_text())
 

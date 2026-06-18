@@ -241,6 +241,7 @@ def run_factory(
     write_json(run_dir / "test-report.json", final_test)
 
     # Capture real diff from target repo if executor produced one.
+    diff_text = ""
     if target_path is not None and final_coding.get("diff_size_bytes", 0) > 0:
         try:
             diff_text = subprocess.check_output(
@@ -250,14 +251,14 @@ def run_factory(
         except subprocess.CalledProcessError as e:
             log.warning("could not capture coding-diff.patch: %s", e)
 
-    # Review / Security / Documentation: still single-pass stubs.
-    review_report = run_review(plan, final_coding)
+    # Review / Security / Documentation: real analysis over the actual diff.
+    review_report = run_review(plan, final_coding, diff_text)
     write_json(run_dir / "review-report.json", review_report)
 
-    security_report = run_security(plan, final_coding)
+    security_report = run_security(plan, final_coding, diff_text)
     write_json(run_dir / "security-report.json", security_report)
 
-    documentation_report = run_documentation(plan)
+    documentation_report = run_documentation(plan, diff_text)
     write_json(run_dir / "documentation-report.json", documentation_report)
 
     # Iteration report (new in v1.2)
