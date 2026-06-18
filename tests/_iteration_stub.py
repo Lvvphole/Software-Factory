@@ -27,8 +27,20 @@ def make_retry_aware_stub(
     stub = tmp_path / f"{name}.py"
     body = textwrap.dedent("""
         import json, os, sys
+        # v1.2.2: the prompt now arrives via STDIN (claude -p reads stdin),
+        # not as an argv positional. Read it from stdin; fall back to argv
+        # for backward compatibility with any caller still passing it inline.
+        stdin_blob = ""
+        try:
+            if not sys.stdin.isatty():
+                stdin_blob = sys.stdin.read()
+        except Exception:
+            stdin_blob = ""
         argv_blob = " ".join(sys.argv)
-        is_retry = "PREVIOUS ATTEMPT FAILED" in argv_blob
+        prompt_blob = stdin_blob if stdin_blob.strip() else argv_blob
+        # Expose for action snippets that want to assert on received prompt.
+        PROMPT_RECEIVED = prompt_blob
+        is_retry = "PREVIOUS ATTEMPT FAILED" in prompt_blob
         # First / retry action follows.
         if is_retry:
             __RETRY__

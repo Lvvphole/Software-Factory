@@ -32,22 +32,28 @@ def cross_platform_run(cmd_list: list[str], **kwargs: Any) -> subprocess.Complet
 
 
 def sanitize_prompt_for_shell(prompt: str) -> str:
-    """Make a multi-line prompt safe to pass through ``cmd.exe /c`` on Windows.
+    """DEPRECATED / identity. Retained for backward compatibility.
 
-    When subprocess.run is invoked with ``shell=True`` on Windows, Python wraps
-    the command line in ``cmd.exe /c "..."``. cmd.exe treats newlines as command
-    terminators **even inside double-quoted strings**, so any argv argument that
-    contains ``\\n`` gets truncated at the first newline and the rest of the
-    prompt is dropped. This affects every multi-line prompt the coding agent
-    builds, both first-attempt and retry.
+    History:
+      - v1.2.1 replaced newlines with `` || `` to survive cmd.exe argv
+        truncation when the prompt was passed as a shell-parsed positional
+        under ``shell=True``.
+      - That fix was unsafe: `` || `` is the cmd.exe command separator, so a
+        prompt routed through ``list2cmdline`` + ``shell=True`` got split into
+        multiple shell commands, and the prompt positional reached ``claude``
+        empty (``Error: Input must be provided ... when using --print``).
 
-    On Windows, this helper replaces newlines with a visible separator that
-    preserves semantic structure so the receiving executor (real Claude Code
-    or test stub) sees the full prompt. On POSIX, returns the prompt unchanged.
+    v1.2.2 removes the root cause: the prompt is no longer passed on the
+    command line at all. It is piped to the child process via **stdin**
+    (``claude -p`` reads the prompt from stdin), where bytes are never parsed
+    by any shell. Newlines, ``||``, quotes, spaces and arg-length limits all
+    become non-issues on every platform.
+
+    This function is now an identity transform. Callers should pass the prompt
+    via stdin (see ``cross_platform_run(..., input=...)``). Kept so existing
+    imports/tests don't break.
     """
-    if sys.platform != "win32":
-        return prompt
-    return prompt.replace("\r\n", " || ").replace("\n", " || ").replace("\r", " || ")
+    return prompt
 
 
 def new_run_id() -> str:
