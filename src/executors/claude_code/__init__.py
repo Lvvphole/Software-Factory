@@ -19,7 +19,7 @@ import subprocess
 import time
 from pathlib import Path
 from ..base import ExecutorResult
-from utils import cross_platform_run, sanitize_prompt_for_shell
+from utils import cross_platform_run
 
 
 class ClaudeCodeExecutor:
@@ -62,21 +62,27 @@ class ClaudeCodeExecutor:
             )
 
         # Headless invocation per Claude Code docs (June 2026):
-        #   claude --print --bare --output-format json
-        #          --allowedTools=<csv> --max-turns N <prompt>
-        # --bare skips hooks/skills/plugins/MCP/auto-memory for reproducible CI runs.
+        #   echo <prompt> | claude -p --bare --output-format json
+        #          --allowedTools=<csv> --max-turns N
+        # The prompt is piped via STDIN, never placed on the command line.
+        # Rationale (v1.2.2): passing the prompt as a shell-parsed positional
+        # under shell=True on Windows is unsafe — cmd.exe truncates at newlines
+        # and treats `||` as a command separator, so the prompt reached `claude`
+        # empty. stdin bytes are never shell-parsed, fixing this on all
+        # platforms. `--bare` skips hooks/skills/plugins/MCP/auto-memory for
+        # reproducible CI runs.
         cmd = [
-            binary, "--print", "--bare",
+            binary, "-p", "--bare",
             "--output-format", "json",
             "--max-turns", str(int(os.environ.get("FACTORY_MAX_TURNS", "8"))),
         ]
         if allowed_tools:
             cmd += ["--allowedTools", ",".join(allowed_tools)]
-        cmd.append(sanitize_prompt_for_shell(prompt))
 
         try:
             proc = cross_platform_run(
                 cmd, cwd=str(target_repo),
+                input=prompt,  # prompt via stdin — never on the command line
                 capture_output=True, text=True, timeout=timeout_s,
                 env={**os.environ},  # ANTHROPIC_API_KEY must already be set
             )

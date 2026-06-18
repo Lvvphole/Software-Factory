@@ -196,7 +196,9 @@ def test_failure_context_present_in_retry(tmp_path, monkeypatch):
     _init_demo_target(target_repo)
 
     # On retry the stub writes BOTH the fix AND a sentinel file containing
-    # the joined argv — proving the failure context was in the prompt.
+    # the prompt it received via stdin — proving the failure context was in
+    # the prompt that actually reached the executor (v1.2.2: prompt is piped
+    # via stdin, not argv).
     wrapper = make_retry_aware_stub(
         tmp_path,
         first_attempt_action=(
@@ -207,7 +209,7 @@ def test_failure_context_present_in_retry(tmp_path, monkeypatch):
             'open(os.path.join(os.getcwd(),"src/calculator/__init__.py"),"w",newline="\\n")'
             '.write("def add(a, b):\\n    return a + b\\n"); '
             'open(os.path.join(os.getcwd(),"PROMPT_RECEIVED.txt"),"w",newline="\\n")'
-            '.write(" ".join(sys.argv))'
+            '.write(PROMPT_RECEIVED)'
         ),
     )
     monkeypatch.setenv("CLAUDE_CODE_BIN", str(wrapper))
