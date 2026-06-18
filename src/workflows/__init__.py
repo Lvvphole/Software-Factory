@@ -117,6 +117,14 @@ def _build_failure_context(prior_coding_reports: list[dict[str, Any]],
     }
 
 
+def _git_current_branch(target_repo: Path) -> str:
+    """Return the current branch name of the target repo."""
+    return subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+        cwd=target_repo, text=True,
+    ).strip()
+
+
 def run_factory(
     signal_path: str,
     runs_root: str = ".factory-runs",
@@ -128,6 +136,8 @@ def run_factory(
     allow_dirty: bool = False,
     allow_protected_branch: bool = False,
     max_attempts: int = 2,
+    create_pr: bool = False,
+    pr_base: str = "main",
 ) -> dict[str, Any]:
     if executor not in available_executors():
         raise ValueError(f"unknown executor: {executor!r}; choices: {available_executors()}")
@@ -308,6 +318,7 @@ def run_factory(
     run_record: dict[str, Any] = {
         "run_id": run_id,
         "signal_id": signal["signal_id"],
+        "signal": signal,
         "plan_id": plan["plan_id"],
         "started_at": started_at,
         "completed_at": started_at,
@@ -318,6 +329,7 @@ def run_factory(
         "test_report": final_test,
         "security_report": security_report,
         "review_report": review_report,
+        "documentation_report": documentation_report,
         "governance_decisions": governance_decisions,
         "attempts_used": attempts_used,
         "iteration_report": iteration_report,
@@ -327,6 +339,60 @@ def run_factory(
     verifier_report = _verifier(run_dir, run_record)
     write_json(run_dir / "verifier-report.json", verifier_report)
     run_record["verifier_decision"] = verifier_report["decision"]
+
+    # ---- Optional: real PR creation (v1.3) -------------------------------
+    # Side-effectful REMOTE WRITE. Gated by ALL of:
+    #   1. opt-in (create_pr=True)
+    #   2. a real target repo exists
+    #   3. verifier decision == "pass" (never PR a failed run)
+    #   4. governance allows the 'create_pull_request' action
+    # The factory opens a DRAFT PR and never merges. Token comes from env only.
+    pr_result: dict[str, Any] | None = None
+    if create_pr:
+        if target_path is None:
+            pr_result = {"created": False, "reason": "no target_repo — cannot create PR"}
+            log.warning("create_pr requested but no target_repo; skipping")
+        elif verifier_report["decision"] != "pass":
+            pr_result = {"created": False,
+                         "reason": f"verifier decision is '{verifier_report['decision']}', not 'pass'"}
+            log.warning("create_pr requested but verifier did not pass; skipping")
+        else:
+            gov = evaluate_action(
+                {"name": "create_pull_request",
+                 "payload": f"open draft PR for {signal['signal_id']} on {target_path}"},
+                autonomy_level,
+            )
+            governance_decisions.append({"check": "create_pull_request", **gov})
+            if not gov["allowed"]:
+                pr_result = {"created": False,
+                             "reason": f"governance blocked PR creation: {gov['reason']}"}
+                log.warning("governance blocked PR creation: %s", gov["reason"])
+            else:
+                from integrations.github import (
+                    GitHubError, build_pr_body, create_pull_request, push_branch,
+                )
+                try:
+                    head_branch = _git_current_branch(target_path)
+                    push_branch(target_path, head_branch)
+                    body = build_pr_body(run_record)
+                    title = f"[factory] {signal.get('title') or signal['signal_id']}"
+                    pr = create_pull_request(
+                        target_path,
+                        head_branch=head_branch,
+                        base_branch=pr_base,
+                        title=title,
+                        body=body,
+                        draft=True,
+                    )
+                    pr_result = {"created": True, **pr}
+                except GitHubError as e:
+                    # Fail loudly in the artifact; do NOT crash the whole run
+                    # (the code change + verifier verdict are still valid).
+                    pr_result = {"created": False, "reason": str(e)}
+                    log.error("PR creation failed: %s", e)
+
+        run_record["pr_result"] = pr_result
+        write_json(run_dir / "pr-result.json", pr_result)
 
     # Final summary
     diff_kb = round(verifier_report["diff_size_bytes"] / 1024.0, 2)
@@ -357,4 +423,5 @@ def run_factory(
     log.info("factory run complete: %s attempts=%d decision=%s",
              run_id, attempts_used, verifier_report["decision"])
     return {"run_id": run_id, "run_dir": str(run_dir), "verifier": verifier_report,
-            "attempts_used": attempts_used, "iteration_report": iteration_report}
+            "attempts_used": attempts_used, "iteration_report": iteration_report,
+            "pr_result": pr_result}

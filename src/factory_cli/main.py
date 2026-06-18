@@ -29,6 +29,13 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument("--max-attempts", type=int, default=2,
                        help="maximum executor attempts when real tests fail (default: 2). "
                             "Only takes effect with a non-mock executor and a target_repo.")
+    # v1.3
+    p_run.add_argument("--create-pr", action="store_true",
+                       help="open a DRAFT pull request on the target repo's GitHub origin "
+                            "if the verifier passes. Requires GITHUB_TOKEN in the environment. "
+                            "Off by default; the factory never merges.")
+    p_run.add_argument("--pr-base", default="main",
+                       help="base branch for the PR (default: main)")
 
     args = parser.parse_args(argv)
 
@@ -44,6 +51,8 @@ def main(argv: list[str] | None = None) -> int:
                 allow_dirty=args.allow_dirty,
                 allow_protected_branch=args.allow_protected_branch,
                 max_attempts=args.max_attempts,
+                create_pr=args.create_pr,
+                pr_base=args.pr_base,
             )
             print(json.dumps({
                 "run_id": result["run_id"],
@@ -54,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
                 "tests_exit_code": result["verifier"]["tests_exit_code"],
                 "diff_size_bytes": result["verifier"]["diff_size_bytes"],
                 "attempts_used": result["attempts_used"],
+                "pr_result": result.get("pr_result"),
             }, indent=2))
             return 0 if result["verifier"]["decision"] == "pass" else 2
         except Exception as e:
