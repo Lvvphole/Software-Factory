@@ -265,7 +265,7 @@ def run_factory(
     review_report = run_review(plan, final_coding, diff_text)
     write_json(run_dir / "review-report.json", review_report)
 
-    security_report = run_security(plan, final_coding, diff_text)
+    security_report = run_security(plan, final_coding, diff_text, signal)
     write_json(run_dir / "security-report.json", security_report)
 
     documentation_report = run_documentation(plan, diff_text)
