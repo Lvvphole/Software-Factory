@@ -38,13 +38,27 @@ class ClaudeCodeExecutor:
             ["git", *args], cwd=target_repo, text=True, stderr=subprocess.PIPE
         ).strip()
 
+    # Artifacts that are never meaningful "code changes" and only inflate the
+    # diff (and can flip a no-op run into a falsely non-empty one). Excluded
+    # from diff measurement via git pathspec. We do NOT modify the target
+    # repo's own .gitignore — measurement-only, non-intrusive.
+    _DIFF_EXCLUDES = (
+        ":(exclude)**/__pycache__/**",
+        ":(exclude)**/*.pyc",
+        ":(exclude)**/*.pyo",
+        ":(exclude)**/.pytest_cache/**",
+        ":(exclude)**/*.egg-info/**",
+    )
+
     def _diff_stats(self, target_repo: Path) -> tuple[int, list[str]]:
         try:
             diff = subprocess.check_output(
-                ["git", "diff", "HEAD"], cwd=target_repo, text=True
+                ["git", "diff", "HEAD", "--", ".", *self._DIFF_EXCLUDES],
+                cwd=target_repo, text=True,
             )
             files = subprocess.check_output(
-                ["git", "diff", "HEAD", "--name-only"], cwd=target_repo, text=True
+                ["git", "diff", "HEAD", "--name-only", "--", ".", *self._DIFF_EXCLUDES],
+                cwd=target_repo, text=True,
             ).splitlines()
             return len(diff.encode("utf-8")), [f for f in files if f]
         except subprocess.CalledProcessError:
@@ -97,22 +111,66 @@ class ClaudeCodeExecutor:
             )
 
         # Parse json output (best-effort; fall back gracefully).
+        # Claude Code (CLI 2.1.x) --output-format json envelope looks like:
+        #   {"type":"result","subtype":"success","is_error":<bool>,
+        #    "result":"<text>","total_cost_usd":<float>,
+        #    "modelUsage":{"<model-id>":{...}}, "num_turns":<int>, ...}
+        # Notes:
+        #  - The model id is a KEY under "modelUsage", not a top-level "model".
+        #  - "is_error": true can accompany a 0 OR non-zero process exit
+        #    (e.g. "Not logged in" returns exit 1 + is_error true + a result
+        #    message). We surface that as an actionable error rather than a
+        #    bare exit code.
         model_used: str | None = None
         cost_usd = 0.0
         raw: dict = {}
+        result_msg: str | None = None
+        is_error = False
         try:
             parsed = json.loads(stdout)
             raw = parsed if isinstance(parsed, dict) else {"raw": parsed}
+            # model: prefer top-level (older CLIs), else first key of modelUsage.
             model_used = raw.get("model") or raw.get("model_used")
+            if not model_used:
+                mu = raw.get("modelUsage")
+                if isinstance(mu, dict) and mu:
+                    model_used = next(iter(mu.keys()))
             cost_usd = float(raw.get("total_cost_usd", raw.get("cost_usd", 0.0)))
+            is_error = bool(raw.get("is_error", False))
+            rm = raw.get("result")
+            result_msg = rm if isinstance(rm, str) else None
         except (json.JSONDecodeError, ValueError, TypeError):
             pass
 
         diff_bytes, files_touched = self._diff_stats(target_repo)
 
+        # Build an actionable error when the CLI reported a logical failure,
+        # even if the OS-level exit code alone would be ambiguous.
+        error: str | None = None
+        if is_error or code != 0:
+            low = (result_msg or "").lower()
+            if "not logged in" in low or "/login" in low or "authenticat" in low:
+                error = (
+                    "claude is not authenticated. Set ANTHROPIC_API_KEY in the "
+                    "environment, or run `claude` then `/login`. "
+                    f"(CLI result: {result_msg!r})"
+                )
+            elif result_msg:
+                error = f"claude reported an error: {result_msg!r}"
+            elif stderr.strip():
+                error = f"claude failed (exit {code}): {stderr.strip()[:300]}"
+            else:
+                error = f"claude failed (exit {code}) with no diagnostic output"
+
+        # Normalize exit_code: if the CLI flagged is_error but the process
+        # exited 0, treat it as a failure (1) so downstream logic is consistent.
+        effective_code = code
+        if is_error and code == 0:
+            effective_code = 1
+
         return ExecutorResult(
             executor=self.name,
-            exit_code=code,
+            exit_code=effective_code,
             duration_ms=int((time.monotonic() - t0) * 1000),
             stdout=stdout[-4000:],
             stderr=stderr[-4000:],
@@ -121,4 +179,5 @@ class ClaudeCodeExecutor:
             model_used=model_used,
             cost_usd=cost_usd,
             raw=raw,
+            error=error,
         )
