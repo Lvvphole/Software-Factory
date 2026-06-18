@@ -163,3 +163,113 @@ def test_multiline_prompt_reaches_executor_via_stdin(tmp_path, monkeypatch):
     assert "Prior attempt produced a diff of 249 bytes" in received
     assert "|| pipes" in received          # the char that broke v1.2.1
     assert '"quotes"' in received
+
+
+def _make_envelope_stub(tmp_path: Path, envelope_json: str,
+                        exit_code: int = 0,
+                        edit: bool = False) -> Path:
+    """Stub that emits a caller-supplied Claude Code JSON envelope on stdout
+    and exits with `exit_code`. Optionally makes a real source edit first.
+    """
+    import json as _json
+    stub = tmp_path / "claude_env.py"
+    edit_code = (
+        'import os\n'
+        't = os.path.join(os.getcwd(), "src", "calculator", "__init__.py")\n'
+        'os.makedirs(os.path.dirname(t), exist_ok=True)\n'
+        'open(t, "w", newline="\\n").write("def add(a, b):\\n    return a + b\\n")\n'
+        if edit else ""
+    )
+    stub.write_text(
+        "#!/usr/bin/env python3\n"
+        "import sys\n"
+        f"{edit_code}"
+        f"sys.stdout.write({envelope_json!r})\n"
+        f"sys.exit({int(exit_code)})\n"
+    )
+    return make_claude_wrapper(tmp_path, stub)
+
+
+def test_not_logged_in_surfaces_actionable_error(tmp_path, monkeypatch):
+    repo = tmp_path / "target"
+    _init_target_repo(repo)
+    # The exact envelope Claude Code emits when unauthenticated (exit 1).
+    envelope = (
+        '{"type":"result","subtype":"success","is_error":true,'
+        '"result":"Not logged in \\u00b7 Please run /login",'
+        '"total_cost_usd":0,"modelUsage":{}}'
+    )
+    wrapper = _make_envelope_stub(tmp_path, envelope, exit_code=1)
+    monkeypatch.setenv("CLAUDE_CODE_BIN", str(wrapper))
+
+    ex = get_executor("claude_code")
+    r = ex.invoke(prompt="fix it", target_repo=repo,
+                  allowed_tools=["Edit"], timeout_s=5)
+    assert r.exit_code != 0
+    assert r.error is not None
+    assert "not authenticated" in r.error.lower()
+    assert "ANTHROPIC_API_KEY" in r.error
+
+
+def test_model_parsed_from_modelusage_key(tmp_path, monkeypatch):
+    repo = tmp_path / "target"
+    _init_target_repo(repo)
+    envelope = (
+        '{"type":"result","subtype":"success","is_error":false,'
+        '"result":"done","total_cost_usd":0.05,'
+        '"modelUsage":{"claude-opus-4-8":{"input_tokens":10}}}'
+    )
+    wrapper = _make_envelope_stub(tmp_path, envelope, exit_code=0, edit=True)
+    monkeypatch.setenv("CLAUDE_CODE_BIN", str(wrapper))
+
+    ex = get_executor("claude_code")
+    r = ex.invoke(prompt="fix it", target_repo=repo,
+                  allowed_tools=["Edit"], timeout_s=5)
+    assert r.exit_code == 0
+    assert r.error is None
+    assert r.model_used == "claude-opus-4-8"
+    assert r.cost_usd == 0.05
+    assert r.diff_size_bytes > 0
+
+
+def test_is_error_true_with_exit_zero_normalized_to_failure(tmp_path, monkeypatch):
+    repo = tmp_path / "target"
+    _init_target_repo(repo)
+    # Some CLI paths set is_error true but exit 0; must be treated as failure.
+    envelope = (
+        '{"type":"result","subtype":"success","is_error":true,'
+        '"result":"some logical error","total_cost_usd":0,"modelUsage":{}}'
+    )
+    wrapper = _make_envelope_stub(tmp_path, envelope, exit_code=0)
+    monkeypatch.setenv("CLAUDE_CODE_BIN", str(wrapper))
+
+    ex = get_executor("claude_code")
+    r = ex.invoke(prompt="x", target_repo=repo, allowed_tools=[], timeout_s=5)
+    assert r.exit_code == 1          # normalized from 0
+    assert r.error is not None
+    assert "some logical error" in r.error
+
+
+def test_pyc_artifacts_excluded_from_diff_stats(tmp_path, monkeypatch):
+    repo = tmp_path / "target"
+    _init_target_repo(repo)
+    # Stub that ONLY creates pyc/pycache noise — no real source change.
+    stub = tmp_path / "claude_pyc.py"
+    stub.write_text(textwrap.dedent("""
+        #!/usr/bin/env python3
+        import json, os, sys
+        d = os.path.join(os.getcwd(), "src", "calculator", "__pycache__")
+        os.makedirs(d, exist_ok=True)
+        open(os.path.join(d, "__init__.cpython-314.pyc"), "wb").write(b"\\x00\\x01\\x02fake-bytecode")
+        print(json.dumps({"result":"noop","is_error":False,
+                          "total_cost_usd":0.0,"modelUsage":{}}))
+        sys.exit(0)
+    """).strip())
+    wrapper = make_claude_wrapper(tmp_path, stub)
+    monkeypatch.setenv("CLAUDE_CODE_BIN", str(wrapper))
+
+    ex = get_executor("claude_code")
+    r = ex.invoke(prompt="x", target_repo=repo, allowed_tools=[], timeout_s=5)
+    # The only change was a .pyc under __pycache__ — diff stats must ignore it.
+    assert r.diff_size_bytes == 0
+    assert r.files_touched == []
